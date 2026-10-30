@@ -76,26 +76,33 @@ Training uses Adam, scaled-space MSE, gradient clipping, `ReduceLROnPlateau`, an
 
 ## Performance Metrics
 
-The code reports regression metrics in original degrees Celsius. The following table describes the measured outputs and the reproducibility parameters currently configured in the project; replace the result cells with values from a completed run when publishing a benchmark.
+The following results are the measured outputs from the three completed runs stored in `metrics/`. All test metrics are calculated in original degrees Celsius on the same **316 held-out samples**. The persistence baseline means “tomorrow = today” and is evaluated on exactly the same dates.
 
-| Category | Metric / setting | Value or source |
-|---|---|---|
-| Forecast horizon | Next-day prediction | 1 day |
-| Input context | Sequence length | 10 days |
-| Primary task metric | R² | `metrics.json` → `test.r2` |
-| Error metric | MAE | `metrics.json` → `test.mae` °C |
-| Error metric | RMSE | `metrics.json` → `test.rmse` °C |
-| Relative error | MAPE | `metrics.json` → `test.mape` |
-| Baseline | Persistence (`tomorrow = today`) | `test_persistence_baseline` |
-| Default QLSTM capacity | Hidden size / qubits / quantum layers | 32 / 4 / 3 |
-| Training budget | Batch size / maximum epochs | 16 / 100 |
-| Regularization | Early-stopping patience | 15 epochs |
-| Reproducibility | Random seed | 42 |
-| Scale | Samples per split | Printed at startup and saved in `metrics.json` |
-| Runtime | Training duration | `metrics.json` → `train_seconds` |
-| Model size | Trainable parameters | `metrics.json` → `parameters.trainable` |
+| Model | Test R² | Test MAE (°C) | Test RMSE (°C) | Test MAPE | Parameters | Training time | Best epoch |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| **QLSTM** | **0.9426** | **1.2158** | **1.5784** | **5.3699%** | 965 | 1,967.9 s | 45 |
+| Hybrid Quantum LSTM | 0.9416 | 1.2318 | 1.5914 | 5.4569% | 5,037 | 49.3 s | 44 |
+| Classical LSTM | 0.9395 | 1.2512 | 1.6193 | 5.6102% | 5,001 | 4.7 s | 34 |
+| Persistence baseline | 0.9357 | 1.2572 | 1.6703 | 5.5500% | — | — | — |
 
-A model should be considered useful only when its test RMSE and MAE are compared with the persistence baseline on the same held-out dates. The training script records this comparison automatically and W&B marks whether the model beats the persistence RMSE.
+### Model-by-model interpretation
+
+- **QLSTM** achieved the strongest test performance: R² **0.9426**, MAE **1.2158 °C**, and RMSE **1.5784 °C**. It improved RMSE by approximately **5.50%** versus persistence and used only **965 trainable parameters**, but required **1,967.9 seconds** because the four recurrent gates are simulated with independent variational quantum circuits.
+- **Hybrid Quantum LSTM** was the second-best model by test error, with R² **0.9416**, MAE **1.2318 °C**, and RMSE **1.5914 °C**. It improved RMSE by approximately **4.72%** versus persistence and completed in **49.3 seconds**. Its classical LSTM plus quantum projection used **5,037 trainable parameters**.
+- **Classical LSTM** was the fastest reference model at **4.7 seconds**. It reached R² **0.9395**, MAE **1.2512 °C**, and RMSE **1.6193 °C**, improving RMSE by approximately **3.05%** versus persistence with **5,001 trainable parameters**.
+
+The results show a clear accuracy/runtime trade-off: QLSTM produced the best measured test metrics and the smallest parameter count, while the classical baseline was approximately **419× faster** than QLSTM. The hybrid model recovered much of the QLSTM accuracy at approximately **40× lower training time** than QLSTM. These are training durations for the recorded runs, not production inference latency or throughput benchmarks.
+
+### Reproducibility and training configuration
+
+All three runs used the same data split: **1,125 training**, **125 validation**, and **316 test** samples. The shared configuration uses a **10-day input sequence**, batch size **16**, maximum **100 epochs**, Adam learning rate **1e-3**, early-stopping patience **15**, and seed **42**. The default QLSTM architecture uses hidden size **32**, **4 qubits**, **3 strongly entangling quantum layers**, and data re-uploading.
+
+The raw experiment artifacts are available at:
+
+- `metrics/classical_20261030_002413/metrics.json`
+- `metrics/hybrid_20261030_002437/metrics.json`
+- `metrics/qlstm_20261030_002652/metrics.json`
+- `metrics/runs_summary.csv`
 
 ## Tech Stack
 
