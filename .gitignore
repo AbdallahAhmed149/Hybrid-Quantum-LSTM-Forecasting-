@@ -218,3 +218,11 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+__pycache__/
+*.pyc
+wandb/
+.vscode/
+# keep the data and trained artifacts out of git if you prefer (W&B stores them anyway)
+# data/
+# models/

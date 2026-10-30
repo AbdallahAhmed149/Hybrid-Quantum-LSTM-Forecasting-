@@ -1,0 +1,4 @@
+run_name,model_type,trainable_params,best_epoch,train_seconds,test_r2,test_mae,test_rmse,test_mape,persistence_r2
+classical_20261030_002413,classical,5001,34,4.7,0.9395,1.2512,1.6193,5.6102,0.9357
+hybrid_20261030_002437,hybrid,5037,44,49.3,0.9416,1.2318,1.5914,5.4569,0.9357
+qlstm_20261030_002652,qlstm,965,45,1967.9,0.9426,1.2158,1.5784,5.3699,0.9357
